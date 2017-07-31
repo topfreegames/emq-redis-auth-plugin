@@ -32,7 +32,7 @@ defmodule EmqRedisAuth.Mixfile do
   defp deps do
     [
       # {:pbkdf2, "~> 2.0"},
-      # {:redix, ">= 0.0.0"},
+      {:redix, ">= 0.0.0"},
       # {:distillery, "~> 1.4", runtime: false},
     ]
   end
