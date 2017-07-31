@@ -1,54 +1,20 @@
+require Record
+
 defmodule EmqRedisAuth.Body do
+  @behaviour :emqttd_auth_mod
 
-    def hook_add(a, b, c) do
-        :emqttd_hooks.add(a, b, c)
-    end
+  Record.defrecord :state, [:auth_cmd, :super_cmd, :hash_type]
 
-    def hook_del(a, b) do
-        :emqttd_hooks.delete(a, b)
-    end
 
-    def load(env) do
-        hook_add(:"message.publish",
-          &EmqRedisAuth.Body.on_message_publish/2,
-          [env]
-        )
-        hook_add(:"client.connected",
-          &EmqRedisAuth.Body.on_client_connected/3,
-          [env]
-        )
-        hook_add(:"client.subscribe",
-          &EmqRedisAuth.Body.on_client_subscribe/4,
-          [env]
-        )
-    end
+  def init(params) do
+    {:ok, params}
+  end
 
-    def unload do
-        hook_del(:"message.publish",
-          &EmqRedisAuth.Body.on_message_publish/2
-        )
-        hook_del(:"client.connected",
-          &EmqRedisAuth.Body.on_client_connected/3
-        )
-        hook_del(:"client.subscribe",
-          &EmqRedisAuth.Body.on_client_subscribe/4
-        )
-    end
+  def check(user, password, _Opts) do
+    IO.inspect(["elixir check", user, password])
+  end
 
-    def on_message_publish(message, env) do
-        IO.inspect(["elixir on_message_publish", message, env])
-        {:ok, message}
-    end
-
-    def on_client_connected(returncode, client, env) do
-        IO.inspect(["elixir on_client_connected", client, returncode, client, env])
-
-        :ok
-    end
-
-    def on_client_subscribe(clientid, username, topictable, env) do
-        IO.inspect(["elixir on_client_subscribe", clientid, username, topictable, env])
-
-        {:ok, topictable}
-    end
+  def desciption() do
+    "Authentication with Redis, based on mosquitto auth"
+  end
 end
