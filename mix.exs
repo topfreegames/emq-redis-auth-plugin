@@ -14,7 +14,7 @@ defmodule EmqRedisAuth.Mixfile do
 
   defp aliases do
     [
-      test: "test --no-start"
+      test: "test --no-start",
     ]
   end
 
@@ -43,15 +43,15 @@ defmodule EmqRedisAuth.Mixfile do
 
       {:pbkdf2,
        github: "emqtt/pbkdf2",
-       only: [:dev, :test],
+       only: [:test],
        ref: "2.0.1",
-       manager: :rebar,
+       manager: :make,
        optional: true,
       },
 
       {:emqttd,
        github: "emqtt/emqttd",
-       only: [:dev, :test],
+       only: [:test],
        ref: "v2.3-beta.1",
        manager: :make,
        optional: true,
