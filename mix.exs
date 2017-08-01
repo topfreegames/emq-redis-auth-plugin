@@ -4,10 +4,18 @@ defmodule EmqRedisAuth.Mixfile do
   def project do
     [app: :emq_redis_auth,
      version: "0.1.0",
-     elixir: "~> 1.4",
+     elixir: "~> 1.5",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+     aliases: aliases(),
+    ]
+  end
+
+  defp aliases do
+    [
+      test: "test --no-start"
+    ]
   end
 
   # Configuration for the OTP application
@@ -31,8 +39,23 @@ defmodule EmqRedisAuth.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      # {:pbkdf2, "~> 2.0"},
       {:redix, ">= 0.0.0"},
+
+      {:pbkdf2,
+       github: "emqtt/pbkdf2",
+       only: [:dev, :test],
+       ref: "2.0.1",
+       manager: :rebar,
+       optional: true,
+      },
+
+      {:emqttd,
+       github: "emqtt/emqttd",
+       only: [:dev, :test],
+       ref: "v2.3-beta.1",
+       manager: :make,
+       optional: true,
+      },
       # {:distillery, "~> 1.4", runtime: false},
     ]
   end

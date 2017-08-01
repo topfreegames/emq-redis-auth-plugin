@@ -1,2 +1,4 @@
 %{"connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [], [], "hexpm"},
+  "emqttd": {:git, "https://github.com/emqtt/emqttd.git", "c349567450a1db87d6b347e2b129e08c5824a5f5", [ref: "v2.3-beta.1"]},
+  "pbkdf2": {:git, "https://github.com/emqtt/pbkdf2.git", "05f8d0c04629ade51dafc26a4b0b1f6bd49970c9", [ref: "2.0.1"]},
   "redix": {:hex, :redix, "0.6.1", "20986b0e02f02b13e6f53c79a1ae70aa83147488c408f40275ec261f5bb0a6d0", [], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}], "hexpm"}}
