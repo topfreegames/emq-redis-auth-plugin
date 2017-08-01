@@ -11,7 +11,7 @@ defmodule EmqRedisAuth.AuthBody do
     username = EmqRedisAuth.Compat.mqtt_client(args, :username)
     db_string = get_user(username)
     if db_string != nil and test_password(db_string, password) do
-      {:ok, is_superuser?(username)}
+      :ok
     else
       {:error, :invalid_credentials}
     end
@@ -19,11 +19,6 @@ defmodule EmqRedisAuth.AuthBody do
 
   def description do
     "Authentication with Redis, based on mosquitto auth"
-  end
-
-  def command(command) do
-    {:ok, result} = Redix.command(:"redix_#{random_index()}", command)
-    result
   end
 
   def test_password(db_string, password) do
@@ -42,18 +37,11 @@ defmodule EmqRedisAuth.AuthBody do
     result == db_pass
   end
 
-  defp is_superuser?(user) do
-    String.starts_with?(user, "admin_")
-  end
-
   defp get_user(user) do
-    response = command(["GET", user])
+    response = EmqRedisAuth.Redis.command(["GET", user])
     if response != nil do
       response
     end
   end
 
-  defp random_index do
-    rem(System.unique_integer([:positive]), 5)
-  end
 end
