@@ -18,27 +18,33 @@ defmodule EmqRedisAuthTest do
   @invalid_credentials {:error, :invalid_credentials}
   # @invalid_topic {:error, :invalid_topic}
   @ok {:ok, false}
+  @ok_superuser {:ok, true}
 
   setup_all do
     :emqttd_access_control.start_link()
     {:ok, _emttd_redis_auth} = EmqRedisAuth.start(nil, nil)
 
-    EmqRedisAuth.Body.command(["SET", @admin_user, @encrypted_pass])
-    EmqRedisAuth.Body.command(["SET", @user, @encrypted_pass])
-    EmqRedisAuth.Body.command(["SET", @user <> "-" <> @wtopic, 2])
-    EmqRedisAuth.Body.command(["SET", @user <> "-" <> @wtopic_wildcard, 2])
-    EmqRedisAuth.Body.command(["SET", @user <> "-" <> @rtopic, 1])
+    EmqRedisAuth.AuthBody.command(["SET", @admin_user, @encrypted_pass])
+    EmqRedisAuth.AuthBody.command(["SET", @user, @encrypted_pass])
+    EmqRedisAuth.AuthBody.command(["SET", @user <> "-" <> @wtopic, 2])
+    EmqRedisAuth.AuthBody.command(["SET", @user <> "-" <> @wtopic_wildcard, 2])
+    EmqRedisAuth.AuthBody.command(["SET", @user <> "-" <> @rtopic, 1])
 
     {:ok, []}
   end
 
   test "when user doesn't exist" do
     mqtt_client = EmqRedisAuth.Compat.mqtt_client(username: "not_user")
-    assert EmqRedisAuth.Body.check(mqtt_client, "some_pass", []) == @invalid_credentials
+    assert EmqRedisAuth.AuthBody.check(mqtt_client, "some_pass", []) == @invalid_credentials
   end
 
   test "when user exist" do
     mqtt_client = EmqRedisAuth.Compat.mqtt_client(username: @user)
-    assert EmqRedisAuth.Body.check(mqtt_client, @pass, []) == @ok
+    assert EmqRedisAuth.AuthBody.check(mqtt_client, @pass, []) == @ok
+  end
+
+  test "when superuser" do
+    mqtt_client = EmqRedisAuth.Compat.mqtt_client(username: @admin_user)
+    assert EmqRedisAuth.AuthBody.check(mqtt_client, @pass, []) == @ok_superuser
   end
 end

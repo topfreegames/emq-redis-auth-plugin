@@ -5,7 +5,7 @@ defmodule EmqRedisAuth.Compat do
   defrecord :state, [:auth_cmd, :super_cmd, :hash_type]
 end
 
-defmodule EmqRedisAuth.Body do
+defmodule EmqRedisAuth.AuthBody do
   require EmqRedisAuth.Compat
 
   @behaviour :emqttd_auth_mod
@@ -15,9 +15,10 @@ defmodule EmqRedisAuth.Body do
   end
 
   def check(args, password, _Opts) do
-    db_string = get_user(EmqRedisAuth.Compat.mqtt_client(args, :username))
+    username = EmqRedisAuth.Compat.mqtt_client(args, :username)
+    db_string = get_user(username)
     if db_string != nil and test_password(db_string, password) do
-      {:ok, false}
+      {:ok, is_superuser?(username)}
     else
       {:error, :invalid_credentials}
     end
@@ -46,6 +47,10 @@ defmodule EmqRedisAuth.Body do
     )
     result = String.slice(Base.encode64(res), 0, key_length)
     result == db_pass
+  end
+
+  defp is_superuser?(user) do
+    String.starts_with?(user, "admin_")
   end
 
   defp get_user(user) do

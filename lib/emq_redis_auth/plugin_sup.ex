@@ -19,6 +19,5 @@ defmodule EmqRedisAuth.Supervisor do
     end
 
     supervise(redix_workers, strategy: :one_for_one)
-    # supervise([], strategy: :one_for_one)
   end
 end
