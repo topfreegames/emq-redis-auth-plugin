@@ -37,8 +37,10 @@ defmodule EmqRedisAuth.AclBody do
   defp has_permission_on_topic?(user, topic, permission_number) do
     topic = get_topic(user, topic)
     if topic > permission_number or is_admin?(user) do
+      IO.puts("#{user} authorized on topic #{topic}")
       :allow
     else
+      IO.puts("#{user} not authorized on topic #{topic}")
       :deny
     end
   end

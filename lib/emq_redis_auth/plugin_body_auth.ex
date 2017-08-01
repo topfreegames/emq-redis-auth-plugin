@@ -11,8 +11,10 @@ defmodule EmqRedisAuth.AuthBody do
     username = EmqRedisAuth.Compat.mqtt_client(args, :username)
     db_string = get_user(username)
     if db_string != nil and test_password(db_string, password) do
+      IO.puts("#{username} authorized")
       :ok
     else
+      IO.puts("#{username} not authorized")
       {:error, :invalid_credentials}
     end
   end
