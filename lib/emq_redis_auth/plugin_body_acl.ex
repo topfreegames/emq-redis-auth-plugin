@@ -8,7 +8,16 @@ defmodule EmqRedisAuth.AclBody do
   end
 
   def check_acl({client, pubsub, topic} = _args, _state) do
-    IO.inspect("check_acl", [client, pubsub, topic])
+    username = EmqRedisAuth.Compat.mqtt_client(client, :username)
+    IO.puts("Username")
+    IO.puts(username)
+
+    IO.puts("pubsub")
+    IO.puts(pubsub)
+
+    IO.puts("topic")
+    IO.puts(topic)
+
     :ignore
   end
 
