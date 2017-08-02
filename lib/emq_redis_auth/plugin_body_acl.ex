@@ -1,5 +1,6 @@
 defmodule EmqRedisAuth.AclBody do
   require EmqRedisAuth.Compat
+  require Logger
   @wildcard_regex ~r/\/([^\/]+)$/
   @behaviour :emqttd_acl_mod
 
@@ -35,12 +36,16 @@ defmodule EmqRedisAuth.AclBody do
   end
 
   defp has_permission_on_topic?(user, topic, permission_number) do
-    topic = get_topic(user, topic)
-    if topic > permission_number or is_admin?(user) do
-      IO.puts("#{user} authorized on topic #{topic}")
+    topic_response = get_topic(user, topic)
+    if topic_response > permission_number or is_admin?(user) do
+      Logger.info fn ->
+        "#{user} authorized on topic #{topic}"
+      end
       :allow
     else
-      IO.puts("#{user} not authorized on topic #{topic}")
+      Logger.error fn ->
+        "#{user} not authorized on topic #{topic}"
+      end
       :deny
     end
   end
