@@ -1,5 +1,5 @@
 defmodule EmqRedisAuth.AuthBody do
-  require EmqRedisAuth.Compat
+  require EmqRedisAuth.Shared
   require Logger
 
   @behaviour :emqttd_auth_mod
@@ -9,13 +9,13 @@ defmodule EmqRedisAuth.AuthBody do
   end
 
   def check(args, password, _Opts) do
-    username = EmqRedisAuth.Compat.mqtt_client(args, :username)
+    username = EmqRedisAuth.Shared.mqtt_client(args, :username)
     db_string = get_user(username)
     if db_string != nil and test_password(db_string, password) do
       Logger.info fn ->
         "#{username} authorized"
       end
-      :ok
+      {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
     else
       Logger.error fn ->
         "#{username} not authorized"

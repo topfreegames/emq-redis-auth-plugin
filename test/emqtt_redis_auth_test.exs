@@ -1,7 +1,7 @@
 defmodule EmqRedisAuthTest do
   use ExUnit.Case, async: true
   doctest EmqRedisAuth
-  require EmqRedisAuth.Compat
+  require EmqRedisAuth.Shared
 
   @user "such_user"
   @admin_user "admin_much_user"
@@ -12,9 +12,10 @@ defmodule EmqRedisAuthTest do
   @rtopic "much/chat/read"
   @encrypted_pass "PBKDF2$sha256$1000$jpZlWoGyBrmwDn5L$tBZHHs52NErO9tz5exw1QiJ03f5b/bfq"
   @invalid_credentials {:error, :invalid_credentials}
-  @ok :ok
-  @mqtt_client_user_record EmqRedisAuth.Compat.mqtt_client(username: @user)
-  @mqtt_client_admin_record EmqRedisAuth.Compat.mqtt_client(username: @admin_user)
+  @ok {:ok, false}
+  @ok_superuser {:ok, true}
+  @mqtt_client_user_record EmqRedisAuth.Shared.mqtt_client(username: @user)
+  @mqtt_client_admin_record EmqRedisAuth.Shared.mqtt_client(username: @admin_user)
 
   setup_all do
     :emqttd_access_control.start_link()
@@ -30,12 +31,16 @@ defmodule EmqRedisAuthTest do
   end
 
   test "when user doesn't exist" do
-    mqtt_client = EmqRedisAuth.Compat.mqtt_client(username: "not_user")
+    mqtt_client = EmqRedisAuth.Shared.mqtt_client(username: "not_user")
     assert EmqRedisAuth.AuthBody.check(mqtt_client, "some_pass", []) == @invalid_credentials
   end
 
   test "when user exist" do
     assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @ok
+  end
+
+  test "when superuser exist" do
+    assert EmqRedisAuth.AuthBody.check(@mqtt_client_admin_record, @pass, []) == @ok_superuser
   end
 
   test "when user can publish topic" do
