@@ -34,7 +34,7 @@ defmodule EmqRedisAuth.AclBody do
   defp has_permission_on_topic?(user, topic, permission_number) do
     case EmqRedisAuth.Shared.is_superuser?(user) or acl_as_boolean(user, topic, permission_number) do
       true ->
-        Logger.info fn ->
+        Logger.debug fn ->
           "#{user} authorized on topic #{topic}"
         end
         :allow
