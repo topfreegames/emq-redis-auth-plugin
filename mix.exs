@@ -23,7 +23,7 @@ defmodule EmqRedisAuth.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      extra_applications: [:logger, :redix, :pbkdf2],
+      extra_applications: [:logger, :redix, :pbkdf2, :cachex],
       mod: {EmqRedisAuth, []}
     ]
   end
@@ -40,6 +40,7 @@ defmodule EmqRedisAuth.Mixfile do
   defp deps do
     [
       {:redix, ">= 0.0.0"},
+      {:cachex, "~> 2.1"},
 
       {:pbkdf2,
        github: "emqtt/pbkdf2",

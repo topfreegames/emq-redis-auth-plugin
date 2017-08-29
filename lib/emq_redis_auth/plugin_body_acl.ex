@@ -9,11 +9,14 @@ defmodule EmqRedisAuth.AclBody do
 
   def check_acl({client, pubsub, topic} = _args, _state) do
     username = EmqRedisAuth.Shared.mqtt_client(client, :username)
-    case pubsub do
-      :publish -> can_publish_topic?(username, topic)
-      :subscribe -> can_subscribe_topic?(username, topic)
-      _ -> :deny
-    end
+    {_, result} = Cachex.get(:auth_cache, "redis_acl-#{username}-#{topic}", fallback: fn(_key) ->
+      case pubsub do
+        :publish -> can_publish_topic?(username, topic)
+        :subscribe -> can_subscribe_topic?(username, topic)
+        _ -> :deny
+      end
+    end)
+    result
   end
 
   def can_publish_topic?(user, topic) do

@@ -10,15 +10,18 @@ defmodule EmqRedisAuth.AuthBody do
 
   def check(args, password, _Opts) do
     username = EmqRedisAuth.Shared.mqtt_client(args, :username)
-    db_string = get_user(username)
-    if db_string != nil and test_password(db_string, password) do
-      {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
-    else
-      Logger.error fn ->
-        "#{username} not authorized"
+    {_, result} = Cachex.get(:auth_cache, "redis_auth" <> username, fallback: fn(_key) ->
+      db_string = get_user(username)
+      if db_string != nil and test_password(db_string, password) do
+        {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
+      else
+        Logger.error fn ->
+          "#{username} not authorized"
+        end
+        {:error, :invalid_credentials}
       end
-      {:error, :invalid_credentials}
-    end
+    end)
+    result
   end
 
   def description do

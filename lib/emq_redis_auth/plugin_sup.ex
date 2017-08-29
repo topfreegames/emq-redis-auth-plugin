@@ -3,10 +3,17 @@ defmodule EmqRedisAuth.Supervisor do
   use Supervisor
 
   def start_link do
-    Supervisor.start_link(__MODULE__, [])
+    Supervisor.start_link(__MODULE__, [
+      worker(Cachex, [:auth_cache, [
+        default_ttl: :timer.minutes(
+          String.to_integer(System.get_env("REDIS_AUTH_CACHE_MINUTES") || "5")
+        ),
+        limit: 500,
+      ], []]),
+    ])
   end
 
-  def init([]) do
+  def init(children) do
     host = System.get_env("REDIS_AUTH_REDIS_HOST") || "localhost"
     port = String.to_integer(System.get_env("REDIS_AUTH_REDIS_PORT") || "6379")
     password = System.get_env("REDIS_AUTH_REDIS_PASSWORD") || nil
@@ -18,6 +25,6 @@ defmodule EmqRedisAuth.Supervisor do
       ], id: {Redix, i})
     end
 
-    supervise(redix_workers, strategy: :one_for_one)
+    supervise(children ++ redix_workers, strategy: :one_for_one)
   end
 end

@@ -18,16 +18,22 @@ defmodule EmqRedisAuthTest do
   @mqtt_client_admin_record EmqRedisAuth.Shared.mqtt_client(username: @admin_user)
 
   setup_all do
+    {:ok, _} = Cachex.Application.start(nil, nil)
     :emqttd_access_control.start_link()
     {:ok, _emttd_redis_auth} = EmqRedisAuth.start(nil, nil)
 
+    {:ok, []}
+  end
+
+  setup do
+    Cachex.clear(:auth_cache)
     EmqRedisAuth.Redis.command(["SET", @admin_user, @encrypted_pass])
     EmqRedisAuth.Redis.command(["SET", @user, @encrypted_pass])
     EmqRedisAuth.Redis.command(["SET", @user <> "-" <> @wtopic, 2])
     EmqRedisAuth.Redis.command(["SET", @user <> "-" <> @wtopic_wildcard, 2])
     EmqRedisAuth.Redis.command(["SET", @user <> "-" <> @rtopic, 1])
 
-    {:ok, []}
+    :ok
   end
 
   test "when user doesn't exist" do
@@ -39,11 +45,27 @@ defmodule EmqRedisAuthTest do
     assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @ok
   end
 
+  test "when user exist and is cached" do
+    assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @ok
+    EmqRedisAuth.Redis.command(["DEL", @user])
+    assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @ok
+  end
+
   test "when superuser exist" do
     assert EmqRedisAuth.AuthBody.check(@mqtt_client_admin_record, @pass, []) == @ok_superuser
   end
 
   test "when user can publish topic" do
+    assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_user_record, :publish, @wtopic}, nil) == :allow
+    assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_admin_record, :publish, @wtopic}, nil) == :allow
+  end
+
+  test "when user can publish topic and is cached" do
+    assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_user_record, :publish, @wtopic}, nil) == :allow
+    assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_admin_record, :publish, @wtopic}, nil) == :allow
+
+    EmqRedisAuth.Redis.command(["DEL", @user <> "-" <> @wtopic])
+
     assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_user_record, :publish, @wtopic}, nil) == :allow
     assert EmqRedisAuth.AclBody.check_acl({@mqtt_client_admin_record, :publish, @wtopic}, nil) == :allow
   end
