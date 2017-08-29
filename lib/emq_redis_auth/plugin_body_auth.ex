@@ -12,9 +12,6 @@ defmodule EmqRedisAuth.AuthBody do
     username = EmqRedisAuth.Shared.mqtt_client(args, :username)
     db_string = get_user(username)
     if db_string != nil and test_password(db_string, password) do
-      Logger.debug fn ->
-        "#{username} authorized"
-      end
       {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
     else
       Logger.error fn ->

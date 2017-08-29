@@ -1,6 +1,5 @@
 defmodule EmqRedisAuth.AclBody do
   require EmqRedisAuth.Shared
-  require Logger
   @wildcard_regex ~r/\/([^\/]+)$/
   @behaviour :emqttd_acl_mod
 
@@ -33,16 +32,8 @@ defmodule EmqRedisAuth.AclBody do
 
   defp has_permission_on_topic?(user, topic, permission_number) do
     case EmqRedisAuth.Shared.is_superuser?(user) or acl_as_boolean(user, topic, permission_number) do
-      true ->
-        Logger.debug fn ->
-          "#{user} authorized on topic #{topic}"
-        end
-        :allow
-      false ->
-        Logger.error fn ->
-          "#{user} not authorized on topic #{topic}"
-        end
-        :deny
+      true -> :allow
+      false -> :deny
     end
   end
 
