@@ -6,6 +6,11 @@ defmodule EmqRedisAuth.Redis do
     result
   end
 
+  def pipeline(pipeline) do
+    {:ok, result} = Redix.pipeline(:"redix_#{random_index()}", pipeline)
+    result
+  end
+
   defp random_index do
     rem(System.unique_integer([:positive]), @redis_instances)
   end

@@ -10,18 +10,26 @@ defmodule EmqRedisAuth.AuthBody do
 
   def check(args, password, _Opts) do
     username = EmqRedisAuth.Shared.mqtt_client(args, :username)
-    {_, result} = Cachex.get(:auth_cache, "redis_auth" <> username, fallback: fn(_key) ->
-      db_string = get_user(username)
-      if db_string != nil and test_password(db_string, password) do
-        {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
-      else
+    throttling = incr_throttle(username)
+    if throttling > throttling_limit() do
         Logger.error fn ->
-          "#{username} not authorized"
+          "#{username} exceeded throttling"
         end
         {:error, :invalid_credentials}
-      end
-    end)
-    result
+    else
+      {_, result} = Cachex.get(:auth_cache, "redis_auth" <> username, fallback: fn(_key) ->
+        db_string = get_user(username)
+        if db_string != nil and test_password(db_string, password) do
+          {:ok, EmqRedisAuth.Shared.is_superuser?(username)}
+        else
+          Logger.error fn ->
+            "#{username} not authorized"
+          end
+          {:error, :invalid_credentials}
+        end
+      end)
+      result
+    end
   end
 
   def description do
@@ -49,6 +57,20 @@ defmodule EmqRedisAuth.AuthBody do
     if response != nil do
       response
     end
+  end
+
+  defp incr_throttle(user) do
+    timeout = String.to_integer(System.get_env("REQUESTS_THROTTLING_TIMEOUT_SEC") || "60")
+    key = "throttling_" <> user
+    response = EmqRedisAuth.Redis.pipeline([["SET", key, 0, "EX", timeout, "NX"], ["INCR", key]])
+    if response != nil do
+      [_,value] = response
+      value
+    end
+  end
+
+  defp throttling_limit() do
+    String.to_integer(System.get_env("REQUESTS_THROTTLING_LIMIT") || "10")
   end
 
 end

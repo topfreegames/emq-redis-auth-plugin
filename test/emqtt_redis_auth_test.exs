@@ -26,6 +26,7 @@ defmodule EmqRedisAuthTest do
   end
 
   setup do
+    System.put_env("REQUESTS_THROTTLING_LIMIT", "1000")
     Cachex.clear(:auth_cache)
     EmqRedisAuth.Redis.command(["SET", @admin_user, @encrypted_pass])
     EmqRedisAuth.Redis.command(["SET", @user, @encrypted_pass])
@@ -53,6 +54,15 @@ defmodule EmqRedisAuthTest do
 
   test "when superuser exist" do
     assert EmqRedisAuth.AuthBody.check(@mqtt_client_admin_record, @pass, []) == @ok_superuser
+  end
+
+  test "when user exceeds throttling" do
+    EmqRedisAuth.Redis.command(["DEL", "throttling_" <> @user])
+    System.put_env("REQUESTS_THROTTLING_LIMIT", "1")
+    assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @ok
+    assert EmqRedisAuth.AuthBody.check(@mqtt_client_user_record, @pass, []) == @invalid_credentials
+    EmqRedisAuth.Redis.command(["DEL", "throttling_" <> @user])
+    System.put_env("REQUESTS_THROTTLING_LIMIT", "1000")
   end
 
   test "when user can publish topic" do
