@@ -60,7 +60,7 @@ defmodule EmqRedisAuth.AuthBody do
   end
 
   defp incr_throttle(user) do
-    timeout = String.to_integer(System.get_env("REQUESTS_THROTTLING_TIMEOUT_SEC") || "60")
+    timeout = String.to_integer(System.get_env("REQUESTS_THROTTLING_TIMEOUT_SEC") || "600")
     key = "throttling_" <> user
     response = EmqRedisAuth.Redis.pipeline([["SET", key, 0, "EX", timeout, "NX"], ["INCR", key]])
     if response != nil do
@@ -70,7 +70,7 @@ defmodule EmqRedisAuth.AuthBody do
   end
 
   defp throttling_limit() do
-    String.to_integer(System.get_env("REQUESTS_THROTTLING_LIMIT") || "10")
+    String.to_integer(System.get_env("REQUESTS_THROTTLING_LIMIT") || "100")
   end
 
 end
